@@ -1,0 +1,6 @@
+{
+  "build": {
+    "builder": "dockerfile"
+  },
+  "start": "vendor/bin/heroku-php-apache2 public/"
+}
