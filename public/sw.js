@@ -3,9 +3,13 @@ const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 // Fichiers à mettre en cache dès l'installation (app shell minimal)
 const PRECACHE_ASSETS = [
+  '/',
   '/offline.html',
+  '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/icons/icon-maskable-192.png',
+  '/icons/icon-maskable-512.png',
 ];
 
 // Extensions considérées comme "assets statiques" -> stratégie cache-first
@@ -40,7 +44,9 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   const isStaticAsset = STATIC_EXTENSIONS.some((ext) => url.pathname.endsWith(ext));
 
-  if (isStaticAsset) {
+  if (url.pathname === '/' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(networkFirst(request));
+  } else if (isStaticAsset) {
     event.respondWith(cacheFirst(request));
   } else {
     event.respondWith(networkFirst(request));
