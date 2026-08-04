@@ -37,4 +37,4 @@ RUN php artisan config:cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 80
-CMD ["vendor/bin/heroku-php-apache2", "public/"]
+CMD ["apache2-foreground"]
