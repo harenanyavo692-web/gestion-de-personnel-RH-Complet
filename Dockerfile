@@ -61,6 +61,10 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 COPY --from=node /app/public/build public/build
 COPY . .
 
+# Ensure Laravel cache/view directories exist in the container
+RUN mkdir -p storage/framework/cache/data storage/framework/views storage/logs && \
+    chown -R www-data:www-data storage bootstrap/cache
+
 # If no .env exists but .env.example is present, copy it (safe fallback)
 RUN if [ ! -f .env ] && [ -f .env.example ]; then cp .env.example .env; fi
 
