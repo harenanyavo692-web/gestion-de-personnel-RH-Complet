@@ -8,7 +8,7 @@ use App\Http\Controllers\ProfileController;
 Route::get('/', fn () => redirect()->route('bienvenue'));
 
 // Auth routes
-// Route::get('/login', 'App\\Http\\Controllers\\AuthController@showLogin')->name('login')->middleware('guest');
+Route::get('/login', 'App\\Http\\Controllers\\AuthController@showLogin')->name('login')->middleware('guest');
 Route::post('/login', 'App\\Http\\Controllers\\AuthController@login')->middleware('guest');
 Route::get('/register', 'App\\Http\\Controllers\\AuthController@showRegister')->name('register')->middleware('guest');
 Route::post('/register', 'App\\Http\\Controllers\\AuthController@register')->middleware('guest');
