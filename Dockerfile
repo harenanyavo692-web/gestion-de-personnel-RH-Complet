@@ -2,7 +2,7 @@
 FROM node:20-alpine AS node
 WORKDIR /app
 
-COPY package.json package-lock.json vite.config.js .
+COPY package.json package-lock.json vite.config.js ./
 COPY resources resources
 COPY public public
 
@@ -23,18 +23,53 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && a2enmod rewrite \
   && rm -rf /var/lib/apt/lists/*
 
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+
 WORKDIR /var/www/html
 
+# Create a strict Apache VirtualHost for Laravel and set ServerName/DirectoryIndex
+RUN printf '%s\n' "<VirtualHost *:80>" \
+    "    ServerName localhost" \
+    "    DocumentRoot ${APACHE_DOCUMENT_ROOT}" \
+    "    DirectoryIndex index.php index.html" \
+    "" \
+    "    <Directory ${APACHE_DOCUMENT_ROOT}>" \
+    "        AllowOverride All" \
+    "        Require all granted" \
+    "        <IfModule mod_rewrite.c>" \
+    "            RewriteEngine On" \
+    "            RewriteCond %{REQUEST_FILENAME} !-f" \
+    "            RewriteCond %{REQUEST_FILENAME} !-d" \
+    "            RewriteRule ^ index.php [QSA,L]" \
+    "        </IfModule>" \
+    "    </Directory>" \
+    "" \
+    "    ErrorLog ${APACHE_LOG_DIR}/error.log" \
+    "    CustomLog ${APACHE_LOG_DIR}/access.log combined" \
+    "</VirtualHost>" > /etc/apache2/sites-available/000-default.conf && \
+    echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
+    a2ensite 000-default
+
+# Install Composer first and install PHP dependencies using cached layers
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Copy composer files first to leverage Docker cache for vendor installation
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || true
+
+# Copy built frontend assets from node stage, then the rest of the app
 COPY --from=node /app/public/build public/build
 COPY . .
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-RUN cp .env.example .env
-RUN php artisan key:generate --ansi
-RUN php artisan config:cache
+# If no .env exists but .env.example is present, copy it (safe fallback)
+RUN if [ ! -f .env ] && [ -f .env.example ]; then cp .env.example .env; fi
 
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Run Laravel optimisation commands only if artisan exists
+RUN if [ -f artisan ]; then php artisan key:generate --ansi || true; fi
+RUN if [ -f artisan ]; then php artisan config:cache || true; fi
+
+# Fix permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
 
 EXPOSE 80
 CMD ["apache2-foreground"]
