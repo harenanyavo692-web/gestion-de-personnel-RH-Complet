@@ -9,6 +9,14 @@
 }
 
 @layer base {
+    body {
+        background-color: var(--color-paper);
+        color: var(--color-ink);
+        font-family: var(--font-display);
+    }
+}
+
+@layer utilities {
     .font-display {
         font-family: var(--font-display);
     }
