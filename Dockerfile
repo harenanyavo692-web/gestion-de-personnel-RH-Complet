@@ -1,11 +1,9 @@
 # Build assets with Node
 FROM node:20-alpine AS node
 WORKDIR /app
-
 COPY package.json package-lock.json vite.config.js ./
 COPY resources resources
 COPY public public
-
 RUN npm ci
 RUN npm run build
 
@@ -18,9 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     git \
     curl \
-  && docker-php-ext-install pdo pdo_sqlite zip \
-  && a2enmod rewrite \
-  && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install pdo pdo_sqlite zip \
+    && a2enmod rewrite \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 ENV APP_ENV=production
@@ -52,10 +50,13 @@ RUN printf '%s\n' "<VirtualHost *:80>" \
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY composer.json composer.lock ./
+# --- FIX : on copie tout le code AVANT composer install ---
+# (avant, composer install tournait avant que "artisan" existe dans l'image,
+# ce qui faisait planter le hook post-autoload-dump -> "php artisan package:discover")
+COPY . .
+
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-COPY . .
 COPY --chown=www-data:www-data --from=node /app/public/build public/build
 
 RUN mkdir -p storage/framework/cache/data storage/framework/views storage/logs database && \
