@@ -14,7 +14,8 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $password = env('SEED_PASSWORD', 'ChangeMoi123!');
+        // « ?: » et non le défaut de env() : .env.example contient « SEED_PASSWORD= » (valeur vide, pas absente).
+        $password = env('SEED_PASSWORD') ?: 'ChangeMoi123!';
 
         $comptes = [
             ['superadmin@cdphm.mg', 'Super administrateur', 'superadmin'],
