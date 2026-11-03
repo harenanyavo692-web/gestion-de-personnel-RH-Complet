@@ -64,6 +64,13 @@ Les boutons « vider / réinitialiser les données » ont été volontairement s
 - Changer `SEED_PASSWORD` et les mots de passe des comptes créés par le seeder.
 - `php artisan config:cache && php artisan route:cache` après avoir vérifié que `php artisan test` passe.
 
+## Déploiement Docker / Render (MySQL)
+
+`Dockerfile` (PHP 8.2 + Apache, extension `pdo_mysql`) et `docker-entrypoint.sh` (cache de config, `migrate --force`
+au démarrage). Render n'héberge pas MySQL : utiliser une base MySQL externe et renseigner `APP_KEY`, `DB_HOST`,
+`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` dans le tableau de bord (voir `render.yaml`). L'entrypoint ne lance pas
+le seeder : exécuter une seule fois `php artisan db:seed` pour créer rôles, permissions et comptes de démarrage.
+
 ## Paramètres, entités et transport (ajouts)
 
 - **Ressources humaines** : *Paramètres RH* (général, personnel, organisation, contrats, congés/absences, workflow) et *Entités RH*
