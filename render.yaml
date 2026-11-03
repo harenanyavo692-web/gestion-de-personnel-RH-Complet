@@ -8,7 +8,7 @@ services:
     startCommand: "apache2-foreground"
     buildCommand: ""
     healthCheckPath: "/"
-    autoDeploy: true
+    autoDeploy: false # déploiement manuel uniquement
     envVars:
       - key: APP_ENV
         value: production
