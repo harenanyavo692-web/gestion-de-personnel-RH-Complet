@@ -68,6 +68,7 @@
                 </td>
                 <td class="text-right">
                     @can('employes.gerer')
+                    <x-archive-btn type="stagiaires" :element="$s" />
                     @unless ($s->certifie)
                     <form method="POST" action="{{ route('rh.stagiaires.destroy', $s) }}" data-confirm="Supprimer {{ $s->nom_complet }} ?">@csrf @method('DELETE')<x-icon-btn icon="trash" tone="danger" title="Supprimer" /></form>
                     @endunless

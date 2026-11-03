@@ -58,6 +58,7 @@
                 <td class="whitespace-nowrap text-right"><div class="flex justify-end">
                     <x-icon-btn icon="eye" title="Consulter" :href="route('raf.lettres.show', $l)" />
                     <x-icon-btn icon="print" title="Imprimer" :href="route('raf.lettres.show', $l)" />
+                    <x-archive-btn type="lettres" :element="$l" />
                     <form method="POST" action="{{ route('raf.lettres.destroy', $l) }}" data-confirm="Supprimer la lettre {{ $l->reference }} du registre ?" data-confirm-label="Supprimer">@csrf @method('DELETE')<x-icon-btn icon="trash" tone="danger" title="Supprimer" /></form>
                 </div></td>
             </tr>

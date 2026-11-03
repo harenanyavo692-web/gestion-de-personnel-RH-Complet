@@ -231,4 +231,22 @@ class ContratsCongesTest extends TestCase
         $this->get('/rh/contrats')->assertSee('Durée indéterminée')->assertSee('CDI');
         $this->assertNull(Contrat::where('type_code', 'CDI')->first()->avancement);
     }
+
+    public function test_une_demande_reste_traitable_quand_l_employe_est_en_corbeille(): void
+    {
+        $e = $this->employe();
+        $this->actingAs($this->user('rh'));
+        $this->post('/rh/conges', $this->demande($e, ['type_code' => 'MISSION', 'date_debut' => '2026-04-06', 'date_fin' => '2026-04-07']));
+        $this->post('/rh/contrats', ['employe_id' => $e->id, 'type_code' => 'CDI', 'date_debut' => today()->toDateString()]);
+        $e->delete();
+
+        $this->get('/rh/absences')->assertOk()->assertSee('Employé en corbeille');
+        $this->get('/rh/contrats')->assertOk();
+
+        // Workflow « responsable » (par défaut) : la décision revient à la direction.
+        $a = Absence::first();
+        $this->actingAs($this->user('direction'))->get('/rh/absences')->assertOk()->assertSee('Valider');
+        $this->post("/rh/conges/{$a->id}/decider", ['decision' => 'valider'])->assertSessionHasNoErrors();
+        $this->assertSame('validee', $a->fresh()->statut);
+    }
 }

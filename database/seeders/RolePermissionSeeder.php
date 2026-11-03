@@ -24,6 +24,7 @@ class RolePermissionSeeder extends Seeder
         'depenses.valider' => 'Valider / refuser les dépenses (RAF)',
         'salaires.voir' => 'Consulter les salaires',
         'salaires.payer' => 'Enregistrer le paiement des salaires',
+        'heures_sup.saisir' => 'Saisir et supprimer des heures supplémentaires (le paiement reste au RAF)',
         'rapprochement.gerer' => 'Gérer le rapprochement Trésor',
         'rapports.voir' => 'Consulter les rapports financiers',
         'rapports.commenter' => 'Commenter les rapports',
@@ -87,7 +88,7 @@ class RolePermissionSeeder extends Seeder
             'compta.parametres.voir', 'compta.entites.voir', 'compta.entites.gerer', 'budgets.voir', 'transport.voir', 'caisse.voir',
         ]],
         'raf' => ['RAF', [
-            'employes.voir', 'recettes.voir', 'depenses.voir', 'depenses.valider', 'salaires.voir', 'salaires.payer',
+            'employes.voir', 'recettes.voir', 'depenses.voir', 'depenses.valider', 'salaires.voir', 'salaires.payer', 'heures_sup.saisir',
             'rapprochement.gerer', 'rapports.voir', 'rapports.commenter', 'lettres.generer',
             'regie.voir', 'regie.emettre', 'tarifs.voir', 'majoration.gerer', 'clients.voir', 'lots.voir',
             'compta.parametres.voir', 'compta.entites.voir', 'compta.entites.gerer', 'budgets.voir', 'transport.voir', 'caisse.voir',
@@ -98,7 +99,7 @@ class RolePermissionSeeder extends Seeder
         'caissier' => ['Caisse — encaissement', ['clients.voir', 'lots.voir', 'lots.encaisser', 'transport.voir', 'transport.encaisser', 'caisse.voir']],
         'logisticien' => ['Logistique — Transport', ['clients.voir', 'lots.voir', 'transport.voir', 'transport.gerer']],
         'cdc' => ['CDC — Gestion clients', ['clients.voir', 'clients.gerer', 'lots.voir']],
-        'rh' => ['Ressources humaines', ['employes.voir', 'employes.gerer', 'presences.gerer', 'salaires.voir', 'lettres.generer', 'corbeille.rh', 'activite.voir', 'rh.parametres.voir', 'rh.parametres.gerer', 'rh.entites.voir', 'rh.entites.gerer', 'contrats.voir', 'contrats.gerer', 'conges.voir', 'conges.gerer', 'conges.valider', 'caisse.voir', 'archives.rh']],
+        'rh' => ['Ressources humaines', ['employes.voir', 'employes.gerer', 'presences.gerer', 'salaires.voir', 'heures_sup.saisir', 'lettres.generer', 'corbeille.rh', 'activite.voir', 'rh.parametres.voir', 'rh.parametres.gerer', 'rh.entites.voir', 'rh.entites.gerer', 'contrats.voir', 'contrats.gerer', 'conges.voir', 'conges.gerer', 'conges.valider', 'caisse.voir', 'archives.rh']],
     ];
 
     private const CATEGORIES = [

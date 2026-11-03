@@ -18,7 +18,7 @@ class LettreRhController extends Controller
 
     public function index(Request $request)
     {
-        $lettres = LettreRh::with('auteur')
+        $lettres = LettreRh::nonArchive()->with('auteur')
             ->when($request->type, fn ($q, $t) => $q->where('type', $t))
             ->when($request->q, fn ($q, $t) => $q->where(fn ($w) => $w->where('nom', 'like', "%{$t}%")->orWhere('reference', 'like', "%{$t}%")->orWhere('poste', 'like', "%{$t}%")))
             ->orderByDesc('id')->paginate(15)->withQueryString();

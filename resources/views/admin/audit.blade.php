@@ -5,7 +5,6 @@
 <x-page-header title="Journal d'activité" :subtitle="number_format($total, 0, ',', ' ') . ' événement(s) enregistré(s) — qui a fait quoi, quand et depuis quelle adresse'">
     <a href="{{ route('admin.audit.export', request()->query()) }}" class="btn-secondary"><x-icon name="download" class="h-4 w-4" />Exporter CSV</a>
 </x-page-header>
-@include('admin._onglets-journal')
 @if ($restreint)<p class="mb-3 rounded-lg px-3 py-2 text-xs" style="background: var(--brand-soft); color: var(--brand)">Vous consultez le journal du périmètre ressources humaines (personnel, contrats, congés, entités, paramètres RH).</p>@endif
 
 <form method="GET" class="card card-pad mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">

@@ -61,12 +61,13 @@
                 <td class="text-right font-medium tabular-nums">@ar($o->montant)</td>
                 <td><x-badge :tone="$tones[$o->statut]">{{ $o->statut_libelle }}</x-badge></td>
                 <td>@foreach ($o->pieces as $p)<a href="{{ route('comptabilite.pieces.show', $p) }}" class="text-brand" title="{{ $p->nom_original }}"><x-icon name="paperclip" class="h-4 w-4" /></a>@endforeach</td>
-                <td class="text-right">
+                <td class="text-right"><div class="flex justify-end">
+                    <x-archive-btn type="depenses" :element="$o" />
                     @can('annuler', $o)
                     <form method="POST" action="{{ route('comptabilite.depenses.destroy', $o) }}" data-confirm="Annuler cet ordre de dépense ?">@csrf @method('DELETE')
                         <x-icon-btn icon="ban" tone="danger" title="Annuler l'ordre" /></form>
                     @endcan
-                </td>
+                </div></td>
             </tr>
         @empty
             <x-empty :cols="8" message="Aucun ordre de dépense." />

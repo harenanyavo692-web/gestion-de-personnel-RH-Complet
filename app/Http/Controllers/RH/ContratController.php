@@ -16,7 +16,7 @@ class ContratController extends Controller
 {
     public function index(Request $request)
     {
-        $contrats = Contrat::with('employe')
+        $contrats = Contrat::nonArchive()->with('employe')
             ->when($request->statut === 'expire', fn ($q) => $q->where('statut', 'actif')->whereDate('date_fin', '<', today()))
             ->when(in_array($request->statut, ['actif', 'termine'], true), fn ($q) => $q->where('statut', $request->statut))
             ->when($request->type, fn ($q, $t) => $q->where('type_code', $t))

@@ -17,7 +17,7 @@ class StagiaireController extends Controller
 {
     public function index(Request $request)
     {
-        $stagiaires = Stagiaire::with(['entite', 'tuteur'])
+        $stagiaires = Stagiaire::nonArchive()->with(['entite', 'tuteur'])
             ->when($request->q, fn ($q, $t) => $q->where(fn ($w) => $w->where('nom', 'like', "%{$t}%")
                 ->orWhere('prenom', 'like', "%{$t}%")->orWhere('etablissement', 'like', "%{$t}%")))
             ->orderByDesc('date_debut')->paginate(15)->withQueryString();

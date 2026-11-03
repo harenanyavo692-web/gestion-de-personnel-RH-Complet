@@ -46,7 +46,7 @@ class RecetteController extends Controller
         $creances = $periode(Recette::query())->whereColumn('montant_facture', '>', 'montant')->get();
 
         return view('comptabilite.recettes', [
-            'recettes' => (clone $liste)->with(['categorie', 'auteur', 'pieces'])
+            'recettes' => (clone $liste)->nonArchive()->with(['categorie', 'auteur', 'pieces'])
                 ->orderByDesc('date_recette')->orderByDesc('id')->paginate(15)->withQueryString(),
             'categories' => $categories,
             'registres' => self::REGISTRES,

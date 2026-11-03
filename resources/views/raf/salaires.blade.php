@@ -3,6 +3,8 @@
 
 @section('content')
 <x-page-header add="form-hs" add-label="Saisir des heures sup" title="Personnel & salaires" subtitle="Paiement mensuel — un seul paiement par employé et par mois">
+    <a href="{{ route('raf.salaires.historique') }}" class="btn-secondary"><x-icon name="log" class="h-4 w-4" />Historique des paiements</a>
+    <a href="{{ route('raf.salaires.etat', ['mois' => $mois]) }}" class="btn-secondary" target="_blank"><x-icon name="print" class="h-4 w-4" />État de paie du mois</a>
     <form method="GET"><input type="month" name="mois" value="{{ $mois }}" onchange="this.form.submit()" class="input"></form>
 </x-page-header>
 @include('raf._onglets-personnel')
@@ -26,14 +28,18 @@
                 <td class="text-right tabular-nums">@if ($e->salaire)@ar($e->salaire)@else<span class="text-slate-400">Non défini</span>@endif</td>
                 <td>@if ($paye)<x-badge tone="success">Payé le {{ $paye->date_paiement->format('d/m') }}</x-badge>@else<x-badge tone="warning">À payer</x-badge>@endif</td>
                 <td class="text-right">
-                    @can('salaires.payer')
-                    @unless ($paye)
-                        <form method="POST" action="{{ route('raf.salaires.payer', $e) }}" data-confirm="Enregistrer le paiement du salaire de {{ $e->nom_complet }} pour {{ $mois }} ?">
-                            @csrf<input type="hidden" name="mois" value="{{ $mois }}">
-                            <button class="btn-primary btn-sm" @disabled(! (float) $e->salaire)><x-icon name="wallet" class="h-3.5 w-3.5" />Payer</button>
-                        </form>
-                    @endunless
-                    @endcan
+                    @if ($paye)
+                        <a href="{{ route('raf.salaires.recu', $paye) }}" target="_blank" class="btn-secondary btn-sm"><x-icon name="print" class="h-3.5 w-3.5" />Imprimer le reçu</a>
+                    @else
+                        @can('salaires.payer')
+                            <form method="POST" action="{{ route('raf.salaires.payer', $e) }}" data-confirm="Enregistrer le paiement du salaire de {{ $e->nom_complet }} pour {{ $mois }} ?">
+                                @csrf<input type="hidden" name="mois" value="{{ $mois }}">
+                                <button class="btn-primary btn-sm" @disabled(! (float) $e->salaire)><x-icon name="wallet" class="h-3.5 w-3.5" />Payer</button>
+                            </form>
+                        @else
+                            <span class="text-xs text-slate-400" title="Seul le RAF enregistre les paiements ; le reçu s'imprime ensuite ici.">Paiement par le RAF</span>
+                        @endcan
+                    @endif
                 </td>
             </tr>
         @empty
@@ -43,7 +49,7 @@
     </table>
 </div>
 
-@can('salaires.payer')
+@can('heures_sup.saisir')
 <details id="form-hs" class="form-modal card mb-4" @if ($errors->has('heures') || $errors->has('date') || $errors->has('majoration')) open @endif>
     <summary>Saisir des heures supplémentaires</summary>
     <form method="POST" id="form-hs-form" action="{{ route('raf.heures-sup.store', $employes->first() ?? 0) }}" data-action-modele="{{ route('raf.heures-sup.store', '__id__') }}" class="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -84,7 +90,7 @@
                 <td class="font-medium">{{ $e->nom_complet }}</td>
                 <td class="text-right tabular-nums">{{ (float) $lignes->sum('heures') }} h</td>
                 <td class="text-right tabular-nums">@if ($impayees->isNotEmpty())@ar($du)@else<span class="text-slate-400">{{ $lignes->isEmpty() ? '—' : 'Payé' }}</span>@endif</td>
-                <td>@can('salaires.payer')<button type="button" class="btn-secondary btn-sm" data-open="form-hs" data-employe="{{ $e->id }}"><x-icon name="plus" class="h-3.5 w-3.5" />Heures sup</button>@endcan</td>
+                <td>@can('heures_sup.saisir')<button type="button" class="btn-secondary btn-sm" data-open="form-hs" data-employe="{{ $e->id }}"><x-icon name="plus" class="h-3.5 w-3.5" />Heures sup</button>@endcan</td>
                 <td class="text-right">
                     @can('salaires.payer')
                     @if ($impayees->isNotEmpty())
@@ -115,7 +121,7 @@
                 <td class="text-xs text-slate-500">{{ $h->motif }}</td>
                 <td class="text-right tabular-nums">@if ($h->date_paiement)@ar($h->montant)@else<x-badge tone="warning">À payer</x-badge>@endif</td>
                 <td class="text-right">
-                    @can('salaires.payer')
+                    @can('heures_sup.saisir')
                     @unless ($h->date_paiement)
                         <form method="POST" action="{{ route('raf.heures-sup.destroy', $h) }}" data-confirm="Supprimer cette ligne ?">@csrf @method('DELETE')<x-icon-btn icon="trash" tone="danger" title="Supprimer" /></form>
                     @endunless
@@ -128,18 +134,32 @@
 </div>
 @endif
 
-<h2 class="mb-2 text-sm font-semibold text-slate-700">Historique des paiements</h2>
+<section id="historique" class="scroll-mt-4">
+<div class="mb-2 flex flex-wrap items-end justify-between gap-2">
+    <div>
+        <h2 class="text-sm font-semibold text-slate-700">Derniers paiements</h2>
+        <p class="text-xs text-slate-500">Salaires et heures supplémentaires payés, du plus récent au plus ancien.</p>
+    </div>
+    <a href="{{ route('raf.salaires.historique') }}" class="btn-secondary btn-sm"><x-icon name="log" class="h-3.5 w-3.5" />Voir tout l'historique</a>
+</div>
 <div class="card table-wrap">
     <table class="data">
-        <thead><tr><th>Employé</th><th>Mois</th><th class="text-right">Montant</th><th>Date</th><th>Enregistré par</th></tr></thead>
+        <thead><tr><th>Date</th><th>Employé</th><th>Nature</th><th>Mois payé</th><th class="text-right">Montant</th><th></th></tr></thead>
         <tbody>
-        @forelse ($historique as $p)
-            <tr><td>{{ $p->employe->nom_complet }}</td><td>{{ $p->mois }}</td><td class="text-right tabular-nums">@ar($p->montant)</td><td>{{ $p->date_paiement->format('d/m/Y') }}</td><td class="text-xs text-slate-500">{{ $p->payeur->name }}</td></tr>
+        @forelse ($historique as $l)
+            <tr>
+                <td class="whitespace-nowrap">{{ $l['date']->format('d/m/Y') }}</td>
+                <td class="font-medium">{{ $l['employe']->nom_complet }}</td>
+                <td>@if ($l['type'] === 'salaire')<x-badge tone="success">Salaire</x-badge>@else<x-badge tone="info">Heures sup · {{ $l['detail'] }}</x-badge>@endif</td>
+                <td class="tabular-nums text-slate-600">{{ $l['periode'] }}</td>
+                <td class="text-right tabular-nums">@ar($l['montant'])</td>
+                <td class="text-right">@if ($l['paiement'])<a href="{{ route('raf.salaires.recu', $l['paiement']) }}" target="_blank" class="btn-secondary btn-sm"><x-icon name="print" class="h-3.5 w-3.5" />Reçu</a>@endif</td>
+            </tr>
         @empty
-            <x-empty :cols="5" message="Aucun paiement enregistré." />
+            <x-empty :cols="6" message="Aucun paiement enregistré pour le moment." />
         @endforelse
         </tbody>
     </table>
 </div>
-<div class="mt-4">{{ $historique->links() }}</div>
+</section>
 @endsection

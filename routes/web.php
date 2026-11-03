@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ArchiveController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\CorbeilleController;
 use App\Http\Controllers\Admin\RoleController;
@@ -198,10 +199,13 @@ Route::middleware('auth')->group(function () {
         Route::post('validations/{ordre}', [ValidationController::class, 'decider'])->name('validations.decider');
 
         Route::get('salaires', [SalaireController::class, 'index'])->middleware('can:salaires.voir')->name('salaires.index');
+        Route::get('salaires/historique', [SalaireController::class, 'historique'])->middleware('can:salaires.voir')->name('salaires.historique');
+        Route::get('salaires/etat', [SalaireController::class, 'etat'])->middleware('can:salaires.voir')->name('salaires.etat');
+        Route::get('salaires/{paiement}/recu', [SalaireController::class, 'recu'])->middleware('can:salaires.voir')->name('salaires.recu');
         Route::post('salaires/{employe}', [SalaireController::class, 'payer'])->middleware('can:salaires.payer')->name('salaires.payer');
-        Route::post('salaires/{employe}/heures-sup', [SalaireController::class, 'ajouterHeuresSup'])->middleware('can:salaires.payer')->name('heures-sup.store');
+        Route::post('salaires/{employe}/heures-sup', [SalaireController::class, 'ajouterHeuresSup'])->middleware('can:heures_sup.saisir')->name('heures-sup.store');
         Route::post('salaires/{employe}/heures-sup/payer', [SalaireController::class, 'payerHeuresSup'])->middleware('can:salaires.payer')->name('heures-sup.payer');
-        Route::delete('heures-sup/{heure}', [SalaireController::class, 'supprimerHeuresSup'])->middleware('can:salaires.payer')->name('heures-sup.destroy');
+        Route::delete('heures-sup/{heure}', [SalaireController::class, 'supprimerHeuresSup'])->middleware('can:heures_sup.saisir')->name('heures-sup.destroy');
 
         Route::middleware('can:rapprochement.gerer')->group(function () {
             Route::get('rapprochements', [RapprochementController::class, 'index'])->name('rapprochements.index');
@@ -235,6 +239,11 @@ Route::middleware('auth')->group(function () {
         Route::post('corbeille/{type}/{id}/restaurer', [CorbeilleController::class, 'restaurer'])->middleware('can:corbeille')->name('corbeille.restaurer');
         Route::delete('corbeille/{type}/{id}', [CorbeilleController::class, 'supprimer'])->middleware('can:corbeille')->name('corbeille.supprimer');
         Route::delete('corbeille', [CorbeilleController::class, 'vider'])->middleware('can:corbeille')->name('corbeille.vider');
+        // Archives : archiver depuis la liste d'un module (droit vérifié dans le contrôleur), consulter / restaurer ici.
+        Route::post('archives/{type}/{id}/archiver', [ArchiveController::class, 'archiver'])->name('archives.archiver');
+        Route::get('archives', [ArchiveController::class, 'index'])->middleware('can:archives')->name('archives.index');
+        Route::post('archives/{type}/{id}/restaurer', [ArchiveController::class, 'restaurer'])->middleware('can:archives')->name('archives.restaurer');
+        Route::delete('archives/{type}/{id}', [ArchiveController::class, 'supprimer'])->middleware('can:donnees.purger')->name('archives.supprimer');
         Route::get('audit/export', [AuditController::class, 'export'])->middleware('can:journal')->name('audit.export');
         Route::get('audit',[AuditController::class, 'index'])->middleware('can:journal')->name('audit');
     });

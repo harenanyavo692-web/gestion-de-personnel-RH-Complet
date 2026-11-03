@@ -93,10 +93,11 @@
                 <td class="text-right font-medium tabular-nums">@ar($r->montant)@if ($reste > 0)<p class="text-xs font-normal text-red-600">reste @ar($reste)</p>@endif</td>
                 <td>@foreach ($r->pieces as $p)<a href="{{ route('comptabilite.pieces.show', $p) }}" class="text-brand" title="{{ $p->nom_original }}"><x-icon name="paperclip" class="h-4 w-4" /></a>@endforeach</td>
                 @can('recettes.gerer')
-                <td class="text-right">
+                <td class="text-right"><div class="flex justify-end">
+                    <x-archive-btn type="recettes" :element="$r" />
                     <form method="POST" action="{{ route('comptabilite.recettes.destroy', $r) }}" data-confirm="Supprimer cette recette ?">@csrf @method('DELETE')
                         <x-icon-btn icon="trash" tone="danger" title="Supprimer" /></form>
-                </td>
+                </div></td>
                 @endcan
             </tr>
         @empty

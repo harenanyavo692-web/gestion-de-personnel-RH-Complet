@@ -73,7 +73,7 @@
     <div class="card card-pad">
         <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-                <p class="font-medium">{{ $a->employe->nom_complet }} <span class="text-sm font-normal text-slate-400">· {{ $a->employe->entite?->nom ?? $a->employe->departement }}</span></p>
+                <p class="font-medium">{{ $a->employe->nom_complet }}@if ($a->employe->trashed()) <x-badge tone="warning">Employé en corbeille</x-badge>@endif <span class="text-sm font-normal text-slate-400">· {{ $a->employe->entite?->nom ?? $a->employe->departement }}</span></p>
                 <p class="mt-0.5 text-sm">{{ $a->type_libelle }} · {{ $a->date_debut->format('d/m/Y') }} → {{ $a->date_fin->format('d/m/Y') }} · <strong>{{ rtrim(rtrim(number_format($a->jours, 1, ',', ''), '0'), ',') }} j</strong></p>
                 @if ($a->motif)<p class="text-xs text-slate-500">{{ $a->motif }}</p>@endif
                 <div class="mt-1.5 flex flex-wrap items-center gap-2">

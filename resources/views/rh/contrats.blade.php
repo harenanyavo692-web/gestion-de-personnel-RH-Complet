@@ -70,6 +70,7 @@
                         </form>
                     </details>
                     @endif
+                    <x-archive-btn type="contrats" :element="$c" />
                     <form method="POST" action="{{ route('rh.contrats.destroy', $c) }}" data-confirm="Mettre ce contrat dans la corbeille ?" data-confirm-label="Supprimer">@csrf @method('DELETE')<x-icon-btn icon="trash" tone="danger" title="Supprimer" /></form>
                 </div></td>
                 @endif

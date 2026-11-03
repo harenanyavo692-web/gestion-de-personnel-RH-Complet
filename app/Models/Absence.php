@@ -20,7 +20,7 @@ class Absence extends Model
 
     public function employe()
     {
-        return $this->belongsTo(Employe::class);
+        return $this->belongsTo(Employe::class)->withTrashed();
     }
 
     public function demandeur()

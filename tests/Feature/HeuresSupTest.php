@@ -68,4 +68,84 @@ class HeuresSupTest extends TestCase
         $this->actingAs($rh)->delete("/employes/{$e->id}")->assertSessionHasErrors('employe');
         $this->assertDatabaseHas('employes', ['id' => $e->id]);
     }
+
+    public function test_impression_du_recu_et_de_l_etat_de_paie(): void
+    {
+        $e = $this->employe();
+        $raf = $this->raf();
+        $this->actingAs($raf);
+        $mois = now()->format('Y-m');
+
+        $this->post("/raf/salaires/{$e->id}/heures-sup", ['date' => today()->toDateString(), 'heures' => 4, 'majoration' => 50, 'motif' => 'Inventaire']);
+        $this->post("/raf/salaires/{$e->id}", ['mois' => $mois])->assertSessionHasNoErrors();
+        $this->post("/raf/salaires/{$e->id}/heures-sup/payer", ['mois' => $mois])->assertSessionHasNoErrors();
+        $paiement = \App\Models\PaiementSalaire::first();
+
+        // 173 330 Ar de salaire + 6 000 Ar d'heures sup = 179 330 Ar
+        $this->get("/raf/salaires/{$paiement->id}/recu")->assertOk()
+            ->assertSee('Reçu de paiement de salaire')->assertSee($e->nom_complet)
+            ->assertSee('SAL-' . str_replace('-', '', $mois) . '-0001')->assertSee('Inventaire')
+            ->assertSee(\App\Support\Fmt::ar(173330))->assertSee(\App\Support\Fmt::ar(179330));
+        $this->get("/raf/salaires/etat?mois={$mois}")->assertOk()
+            ->assertSee('État de paie du personnel')->assertSee($e->nom_complet)->assertSee(\App\Support\Fmt::ar(179330));
+        $this->get('/raf/salaires?mois=' . $mois)->assertOk()->assertSee("/raf/salaires/{$paiement->id}/recu", false)->assertSee('État de paie du mois')->assertSee('Imprimer le reçu');
+        $this->get('/raf/salaires/etat?mois=invalide')->assertOk(); // mois invalide : repli sur le mois courant
+
+        // Consultation réservée à ceux qui voient les salaires.
+        $this->actingAs(User::factory()->create(['role_id' => Role::where('slug', 'comptable')->value('id'), 'actif' => true]));
+        $this->get("/raf/salaires/{$paiement->id}/recu")->assertForbidden();
+        $this->get('/raf/salaires/etat')->assertForbidden();
+        $this->actingAs(User::factory()->create(['role_id' => Role::where('slug', 'rh')->value('id'), 'actif' => true]));
+        $this->get("/raf/salaires/{$paiement->id}/recu")->assertOk();
+    }
+
+    public function test_historique_des_paiements_reunit_salaires_et_heures_sup(): void
+    {
+        $e = $this->employe();
+        $autre = Employe::create(['matricule' => 'M2', 'nom' => 'Rabe', 'prenom' => 'Paul', 'email' => 'p@t.mg', 'poste' => 'Agent', 'date_embauche' => today(), 'salaire' => 100000, 'statut' => 'actif']);
+        $this->actingAs($this->raf());
+        $mois = now()->format('Y-m');
+
+        $this->get('/raf/salaires/historique')->assertOk()->assertSee('Historique des paiements')->assertSee('Aucun paiement enregistré pour le moment');
+
+        $this->post("/raf/salaires/{$e->id}/heures-sup", ['date' => today()->toDateString(), 'heures' => 4, 'majoration' => 50]);
+        $this->post("/raf/salaires/{$e->id}", ['mois' => $mois]);
+        $this->post("/raf/salaires/{$e->id}/heures-sup/payer", ['mois' => $mois]);
+        $this->post("/raf/salaires/{$autre->id}", ['mois' => $mois]);
+
+        // 173 330 + 6 000 (heures sup) + 100 000 = 279 330 Ar, trois lignes
+        $this->get('/raf/salaires')->assertOk()->assertSee('Derniers paiements')->assertSee(route('raf.salaires.historique'), false);
+        $this->get('/raf/salaires/historique')->assertOk()
+            ->assertSee('Heures sup · 4 h')->assertSee($e->nom_complet)->assertSee($autre->nom_complet)
+            ->assertSee('Total (3 paiements)')->assertSee(\App\Support\Fmt::ar(279330));
+
+        // Filtre par employé : il ne reste que ses deux paiements (salaire + heures sup).
+        $this->get("/raf/salaires/historique?h_employe={$e->id}")->assertOk()->assertSee('Total (2 paiements)')->assertSee(\App\Support\Fmt::ar(179330));
+        // Filtre sur un mois sans paiement.
+        $this->get('/raf/salaires/historique?h_mois=2020-01')->assertOk()->assertSee('Aucun paiement pour ces critères');
+        $this->get('/raf/salaires/historique?h_mois=invalide&h_employe=abc')->assertOk()->assertSee('Total (3 paiements)'); // filtres invalides ignorés
+    }
+
+    public function test_le_rh_saisit_les_heures_sup_mais_seul_le_raf_les_paie(): void
+    {
+        $e = $this->employe();
+        $this->raf(); // charge les rôles
+        $rh = User::factory()->create(['role_id' => Role::where('slug', 'rh')->value('id'), 'actif' => true]);
+        $this->actingAs($rh);
+
+        $this->get('/raf/salaires')->assertOk()->assertSee('Saisir des heures supplémentaires')->assertSee('Paiement par le RAF')->assertDontSee('Imprimer le reçu');
+        $this->post("/raf/salaires/{$e->id}/heures-sup", ['date' => today()->toDateString(), 'heures' => 2, 'majoration' => 30, 'motif' => 'Clôture'])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('heures_supplementaires', ['employe_id' => $e->id, 'saisi_par' => $rh->id, 'motif' => 'Clôture']);
+
+        // Le paiement reste réservé au RAF.
+        $this->post("/raf/salaires/{$e->id}/heures-sup/payer", ['mois' => now()->format('Y-m')])->assertForbidden();
+        $this->post("/raf/salaires/{$e->id}", ['mois' => now()->format('Y-m')])->assertForbidden();
+        $this->assertNull(HeureSupplementaire::first()->date_paiement);
+
+        // Le RH peut retirer une ligne non payée ; un compte sans droit ne peut ni saisir ni supprimer.
+        $this->delete('/raf/heures-sup/' . HeureSupplementaire::first()->id)->assertRedirect();
+        $this->assertSame(0, HeureSupplementaire::count());
+        $comptable = User::factory()->create(['role_id' => Role::where('slug', 'comptable')->value('id'), 'actif' => true]);
+        $this->actingAs($comptable)->post("/raf/salaires/{$e->id}/heures-sup", ['date' => today()->toDateString(), 'heures' => 1, 'majoration' => 30])->assertForbidden();
+    }
 }

@@ -40,6 +40,7 @@
                 @can('employes.gerer')
                 <td class="whitespace-nowrap text-right"><div class="flex justify-end">
                     <x-icon-btn icon="edit" title="Modifier" :href="route('employes.edit', $e)" />
+                    <x-archive-btn type="employes" :element="$e" />
                     <form action="{{ route('employes.destroy', $e) }}" method="POST" data-confirm="Mettre {{ $e->nom_complet }} dans la corbeille ?" data-confirm-label="Supprimer">@csrf @method('DELETE')<x-icon-btn icon="trash" tone="danger" title="Supprimer" /></form>
                 </div></td>
                 @endcan
@@ -62,6 +63,7 @@
                 <span style="color: var(--muted)">{{ $e->entite?->nom ?? $e->departement }} · <span class="font-mono">{{ $e->matricule }}</span></span>
                 @can('employes.gerer')
                 <span class="flex"><x-icon-btn icon="edit" title="Modifier" :href="route('employes.edit', $e)" />
+                    <x-archive-btn type="employes" :element="$e" />
                     <form action="{{ route('employes.destroy', $e) }}" method="POST" data-confirm="Mettre {{ $e->nom_complet }} dans la corbeille ?" data-confirm-label="Supprimer">@csrf @method('DELETE')<x-icon-btn icon="trash" tone="danger" title="Supprimer" /></form></span>
                 @endcan
             </div>

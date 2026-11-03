@@ -23,7 +23,7 @@ class EmployeController extends Controller
 
     public function index(Request $request)
     {
-        $employes = Employe::recherche($request->get('q'))
+        $employes = Employe::nonArchive()->recherche($request->get('q'))
             ->when($request->get('entity_id'), fn ($q, $id) => $q->where('entity_id', $id))
             ->when($request->get('statut'), fn ($q, $statut) => $q->where('statut', $statut))
             ->orderBy('nom')
@@ -31,7 +31,7 @@ class EmployeController extends Controller
             ->withQueryString();
 
         $stats = [
-            'total' => Employe::count(),
+            'total' => Employe::nonArchive()->count(),
             'actifs' => Employe::where('statut', 'actif')->count(),
             'conges' => Employe::where('statut', 'congé')->count(),
             'suspendus' => Employe::where('statut', 'suspendu')->count(),

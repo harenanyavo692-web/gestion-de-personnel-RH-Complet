@@ -17,7 +17,7 @@ class OrdreDepenseController extends Controller
 {
     public function index(Request $request)
     {
-        $ordres = OrdreDepense::with(['categorie', 'soumisPar', 'pieces'])
+        $ordres = OrdreDepense::nonArchive()->with(['categorie', 'soumisPar', 'pieces'])
             ->when($request->statut, fn ($q, $s) => $q->where('statut', $s))
             ->when($request->categorie_id, fn ($q, $c) => $q->where('categorie_id', $c))
             ->when($request->q, fn ($q, $t) => $q->where(fn ($w) => $w

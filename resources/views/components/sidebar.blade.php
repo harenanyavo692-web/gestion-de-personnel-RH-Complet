@@ -26,7 +26,9 @@
         ]],
         ['label' => 'Système', 'items' => [
             ['Utilisateurs & rôles', ['admin.utilisateurs.index' => 'admin.utilisateurs', 'admin.roles.index' => 'admin.roles'], ['admin.utilisateurs.*', 'admin.roles.*'], null, 'users', ['Utilisateurs', 'Rôles & permissions']],
-            ["Journal & corbeille", ['admin.audit' => 'journal', 'admin.corbeille.index' => 'corbeille'], ['admin.audit*', 'admin.corbeille.*'], null, 'log', ["Journal d'activité", 'Corbeille']],
+            ["Journal d'activité", 'admin.audit', 'admin.audit*', 'journal', 'log'],
+            ['Corbeille', 'admin.corbeille.index', 'admin.corbeille.*', 'corbeille', 'trash'],
+            ['Archives', 'admin.archives.index', 'admin.archives.*', 'archives', 'archive'],
         ]],
     ];
 

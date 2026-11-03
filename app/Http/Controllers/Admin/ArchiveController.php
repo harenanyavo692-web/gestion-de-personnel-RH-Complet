@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\AuditLogger;
 use App\Support\Elements;
 use Illuminate\Database\QueryException;
@@ -30,10 +31,13 @@ class ArchiveController extends Controller
         $type = array_key_exists($request->type, $types) ? $request->type : array_key_first($types);
         $classe = $this->classe($type);
 
+        $elements = $classe::archives()->orderByDesc('archived_at')->paginate(15)->withQueryString();
+
         return view('admin.archives', [
             'type' => $type,
             'types' => collect($types)->map(fn ($d) => ['label' => $d[1], 'nombre' => $d[0]::archives()->count()]),
-            'elements' => $classe::archives()->orderByDesc('archived_at')->paginate(15)->withQueryString(),
+            'elements' => $elements,
+            'auteurs' => User::whereIn('id', $elements->pluck('archived_by')->filter())->pluck('name', 'id'),
             'peutGerer' => Elements::peutGerer(auth()->user(), $type),
         ]);
     }

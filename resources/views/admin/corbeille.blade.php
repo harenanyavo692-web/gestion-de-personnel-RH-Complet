@@ -10,7 +10,6 @@
     </form>
     @endif
 </x-page-header>
-@include('admin._onglets-journal')
 
 <nav class="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
     @foreach ($types as $k => $t)
