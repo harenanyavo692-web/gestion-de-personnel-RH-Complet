@@ -126,26 +126,44 @@ class HeuresSupTest extends TestCase
         $this->get('/raf/salaires/historique?h_mois=invalide&h_employe=abc')->assertOk()->assertSee('Total (3 paiements)'); // filtres invalides ignorés
     }
 
-    public function test_le_rh_saisit_les_heures_sup_mais_seul_le_raf_les_paie(): void
+    public function test_le_rh_saisit_et_paie_les_salaires_et_les_heures_sup(): void
     {
         $e = $this->employe();
         $this->raf(); // charge les rôles
         $rh = User::factory()->create(['role_id' => Role::where('slug', 'rh')->value('id'), 'actif' => true]);
         $this->actingAs($rh);
+        $mois = now()->format('Y-m');
 
-        $this->get('/raf/salaires')->assertOk()->assertSee('Saisir des heures supplémentaires')->assertSee('Paiement par le RAF')->assertDontSee('Imprimer le reçu');
+        $this->get('/raf/salaires')->assertOk()->assertSee('Saisir des heures supplémentaires')->assertDontSee('Paiement par le RAF');
         $this->post("/raf/salaires/{$e->id}/heures-sup", ['date' => today()->toDateString(), 'heures' => 2, 'majoration' => 30, 'motif' => 'Clôture'])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('heures_supplementaires', ['employe_id' => $e->id, 'saisi_par' => $rh->id, 'motif' => 'Clôture']);
 
-        // Le paiement reste réservé au RAF.
-        $this->post("/raf/salaires/{$e->id}/heures-sup/payer", ['mois' => now()->format('Y-m')])->assertForbidden();
-        $this->post("/raf/salaires/{$e->id}", ['mois' => now()->format('Y-m')])->assertForbidden();
-        $this->assertNull(HeureSupplementaire::first()->date_paiement);
+        // Le RH paie le salaire puis les heures supplémentaires ; le reçu et l'historique les montrent.
+        $this->post("/raf/salaires/{$e->id}", ['mois' => $mois])->assertSessionHasNoErrors();
+        $this->post("/raf/salaires/{$e->id}/heures-sup/payer", ['mois' => $mois])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('paiements_salaires', ['employe_id' => $e->id, 'mois' => $mois, 'paye_par' => $rh->id]);
+        $this->assertNotNull(HeureSupplementaire::first()->date_paiement);
+        $this->get('/raf/salaires')->assertOk()->assertSee('Imprimer le reçu');
+        $this->get('/raf/salaires/historique')->assertOk()->assertSee('Total (2 paiements)');
 
-        // Le RH peut retirer une ligne non payée ; un compte sans droit ne peut ni saisir ni supprimer.
-        $this->delete('/raf/heures-sup/' . HeureSupplementaire::first()->id)->assertRedirect();
-        $this->assertSame(0, HeureSupplementaire::count());
+        // Un salaire ne se paie qu'une fois par mois.
+        $this->post("/raf/salaires/{$e->id}", ['mois' => $mois])->assertSessionHasErrors('employe');
+
+        // Une ligne payée ne se supprime plus ; un compte sans droit ne peut ni saisir ni payer.
+        $this->delete('/raf/heures-sup/' . HeureSupplementaire::first()->id)->assertStatus(422);
         $comptable = User::factory()->create(['role_id' => Role::where('slug', 'comptable')->value('id'), 'actif' => true]);
         $this->actingAs($comptable)->post("/raf/salaires/{$e->id}/heures-sup", ['date' => today()->toDateString(), 'heures' => 1, 'majoration' => 30])->assertForbidden();
+        $this->post("/raf/salaires/{$e->id}", ['mois' => '2020-01'])->assertForbidden();
+    }
+
+    public function test_la_direction_consulte_les_salaires_sans_pouvoir_payer(): void
+    {
+        $e = $this->employe();
+        $this->raf();
+        $this->actingAs(User::factory()->create(['role_id' => Role::where('slug', 'direction')->value('id'), 'actif' => true]));
+
+        $this->get('/raf/salaires')->assertOk()->assertSee('Paiement par le RAF');
+        $this->post("/raf/salaires/{$e->id}", ['mois' => now()->format('Y-m')])->assertForbidden();
+        $this->post("/raf/salaires/{$e->id}/heures-sup/payer", ['mois' => now()->format('Y-m')])->assertForbidden();
     }
 }

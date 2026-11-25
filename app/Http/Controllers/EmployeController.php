@@ -37,6 +37,8 @@ class EmployeController extends Controller
             'suspendus' => Employe::where('statut', 'suspendu')->count(),
         ];
 
+        $stats['archives'] = Employe::archives()->count();
+
         return view('employes.index', ['employes' => $employes, 'entites' => OrganizationEntity::orderBy('nom')->get(['id', 'nom']), 'stats' => $stats]);
     }
 

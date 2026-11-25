@@ -29,7 +29,7 @@ Tests (SQLite en mémoire, sans toucher à MySQL) : `php artisan test`
 | direction | Lecture de tout le périmètre, commentaires de rapport, audit |
 | comptable | Recettes, soumission d'ordres de dépense, situation financière |
 | raf | Validation des dépenses, salaires, rapprochement Trésor, rapports — **pas** d'administration |
-| rh | Personnel, présences, lecture des salaires |
+| rh | Personnel, présences, salaires (lecture et paiement), heures supplémentaires |
 
 Mécanisme : tables `roles` / `permissions`, middleware `can:module.action` sur les routes, `OrdreDepensePolicy`
 (un utilisateur ne peut pas valider un ordre qu'il a soumis), Form Requests, transactions (`DB::transaction` + verrou)

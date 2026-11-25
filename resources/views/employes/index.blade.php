@@ -5,6 +5,7 @@
 @php $tones = ['actif' => 'success', 'congé' => 'warning', 'suspendu' => 'danger', 'inactif' => 'neutral']; @endphp
 
 <x-page-header title="Personnel" :subtitle="$stats['total'] . ' employés · ' . $stats['actifs'] . ' actifs'">
+    @can('archives')<a href="{{ route('admin.archives.index', ['type' => 'employes']) }}" class="btn-secondary"><x-icon name="archive" class="h-4 w-4" />Archives @if ($stats['archives'])<span class="rounded-full bg-slate-100 px-1.5 text-xs">{{ $stats['archives'] }}</span>@endif</a>@endcan
     @can('employes.gerer')<a href="{{ route('employes.create') }}" class="btn-primary"><x-icon name="plus" class="h-4 w-4" />Nouvel employé</a>@endcan
     <x-view-toggle group="employes" />
 </x-page-header>

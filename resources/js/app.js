@@ -267,3 +267,18 @@ if (donnees) {
         window.addEventListener('themechange', rendre);
     });
 }
+
+/* ---------- Justificatifs : taille max + obligatoire selon le type d'absence ---------- */
+$$('input[type=file][data-max]').forEach((input) => {
+    const max = Number(input.dataset.max);
+    input.addEventListener('change', () => {
+        const f = input.files[0];
+        if (f && f.size > max) { input.value = ''; window.toast('error', `Fichier trop volumineux (${max / 1048576} Mo max).`); }
+    });
+    const type = input.form && $('select[name=type_code]', input.form);
+    if (!type) return;
+    const etoile = $('[data-req-star]', input.parentElement);
+    const maj = () => { input.required = type.selectedOptions[0]?.dataset.justif === '1'; if (etoile) etoile.hidden = !input.required; };
+    type.addEventListener('change', maj);
+    maj();
+});

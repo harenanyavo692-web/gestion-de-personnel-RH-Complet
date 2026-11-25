@@ -66,6 +66,27 @@ class ArchivesTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'archive.desarchive']);
     }
 
+    public function test_la_page_personnel_montre_l_archivage_et_le_lien_vers_les_archives(): void
+    {
+        $actif = $this->employe('Vivant', 'actif');
+        $inactif = $this->employe('Parti', 'inactif');
+        $this->actingAs($this->user('rh'));
+
+        // Un employé actif a un bouton grisé qui explique pourquoi ; un inactif a un vrai bouton.
+        $page = $this->get('/employes')->assertOk()->assertSee('Archives')
+            ->assertSee('Seul un employé inactif peut être archivé', false)
+            ->assertSee("/admin/archives/employes/{$inactif->id}/archiver", false)
+            ->assertDontSee("/admin/archives/employes/{$actif->id}/archiver", false);
+
+        $this->post("/admin/archives/employes/{$inactif->id}/archiver")->assertRedirect();
+        $this->get('/employes'); // consomme le message de confirmation
+        $this->get('/employes')->assertDontSee('Parti')->assertSee(route('admin.archives.index', ['type' => 'employes']), false);
+        $this->get('/admin/archives?type=employes')->assertOk()->assertSee('Parti');
+
+        // Le comptable ne gère pas les employés : pas d'accès à la page Personnel ni de lien vers les archives.
+        $this->actingAs($this->user('comptable'))->get('/employes')->assertForbidden();
+    }
+
     public function test_un_employe_actif_ne_peut_pas_etre_archive(): void
     {
         $e = $this->employe('Actif', 'actif');

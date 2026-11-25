@@ -51,11 +51,11 @@
             <option value="">—</option>@foreach ($employes as $e)<option value="{{ $e->id }}" @selected(old('employe_id') == $e->id)>{{ $e->nom_complet }}</option>@endforeach
         </x-field>
         <x-field name="type_code" label="Type" type="select" required>
-            @foreach ($types->where('actif', true) as $t)<option value="{{ $t->code }}" @selected(old('type_code') === $t->code)>{{ $t->libelle }}{{ ($t->meta['justificatif'] ?? false) ? ' (justificatif)' : '' }}</option>@endforeach
+            @foreach ($types->where('actif', true) as $t)<option value="{{ $t->code }}" data-justif="{{ ($t->meta['justificatif'] ?? false) ? 1 : 0 }}" @selected(old('type_code') === $t->code)>{{ $t->libelle }}{{ ($t->meta['justificatif'] ?? false) ? ' (justificatif)' : '' }}</option>@endforeach
         </x-field>
         <x-field name="date_debut" label="Du" type="date" required /><x-field name="date_fin" label="Au" type="date" required />
         <x-field name="motif" label="Motif" class="sm:col-span-2" />
-        <x-field name="justificatif" label="Justificatif (PDF / image, 5 Mo)" type="file" accept=".pdf,.jpg,.jpeg,.png" class="sm:col-span-2" />
+        <x-field name="justificatif" label="Justificatif" type="file" accept=".pdf,.jpg,.jpeg,.png" class="sm:col-span-2" />
         <div class="sm:col-span-2 lg:col-span-4 flex justify-end"><button class="btn-primary">Enregistrer la demande</button></div>
     </form>
 </details>

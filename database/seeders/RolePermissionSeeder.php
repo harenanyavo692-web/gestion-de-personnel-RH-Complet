@@ -99,7 +99,7 @@ class RolePermissionSeeder extends Seeder
         'caissier' => ['Caisse — encaissement', ['clients.voir', 'lots.voir', 'lots.encaisser', 'transport.voir', 'transport.encaisser', 'caisse.voir']],
         'logisticien' => ['Logistique — Transport', ['clients.voir', 'lots.voir', 'transport.voir', 'transport.gerer']],
         'cdc' => ['CDC — Gestion clients', ['clients.voir', 'clients.gerer', 'lots.voir']],
-        'rh' => ['Ressources humaines', ['employes.voir', 'employes.gerer', 'presences.gerer', 'salaires.voir', 'heures_sup.saisir', 'lettres.generer', 'corbeille.rh', 'activite.voir', 'rh.parametres.voir', 'rh.parametres.gerer', 'rh.entites.voir', 'rh.entites.gerer', 'contrats.voir', 'contrats.gerer', 'conges.voir', 'conges.gerer', 'conges.valider', 'caisse.voir', 'archives.rh']],
+        'rh' => ['Ressources humaines', ['employes.voir', 'employes.gerer', 'presences.gerer', 'salaires.voir', 'salaires.payer', 'heures_sup.saisir', 'lettres.generer', 'corbeille.rh', 'activite.voir', 'rh.parametres.voir', 'rh.parametres.gerer', 'rh.entites.voir', 'rh.entites.gerer', 'contrats.voir', 'contrats.gerer', 'conges.voir', 'conges.gerer', 'conges.valider', 'caisse.voir', 'archives.rh']],
     ];
 
     private const CATEGORIES = [
